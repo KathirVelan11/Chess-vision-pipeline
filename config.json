@@ -1,0 +1,38 @@
+{
+  "piece_model_path": "./piece-classification/chess_detection/chess_model_20251007_185940/weights/best.pt",
+  "occupancy_model_path": null,
+  "square_size": 80,
+  "piece_confidence": 0.3,
+  "piece_iou": 0.5,
+  "output_dir": "results",
+  "image_preprocessing": {
+    "max_size": 1024,
+    "enhance_contrast": true,
+    "denoise": false
+  },
+  "board_detection": {
+    "edge_method": "scharr",
+    "hough_threshold": 30,
+    "min_line_length": 30,
+    "max_line_gap": 5
+  },
+  "validation": {
+    "validate_corners": true,
+    "validate_squares": true,
+    "validate_fen": true
+  },
+  "visualization": {
+    "save_intermediate_steps": true,
+    "show_confidence_scores": true,
+    "square_border_color": [
+      0,
+      255,
+      0
+    ],
+    "piece_label_color": [
+      255,
+      255,
+      255
+    ]
+  }
+}
