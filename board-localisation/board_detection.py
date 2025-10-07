@@ -345,7 +345,7 @@ def detect_board(image_path: str, output_dir: str = 'board-localisation/results'
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Optimized chess board detection')
-    parser.add_argument('--image_path', type=str, default='board-localisation/images/chess_image_1.jpg')
+    parser.add_argument('--image_path', type=str, default='board-localisation/images/real_image_1.jpeg')
     parser.add_argument('--output_dir', type=str, default='board-localisation/results')
     args = parser.parse_args()
     
