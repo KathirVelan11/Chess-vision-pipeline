@@ -141,12 +141,6 @@ Each module can also be run standalone — see `board-localisation/test.py`, `oc
 
 The pipeline outputs standard FEN notation, e.g. `rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`, plus a JSON result with per-square occupancy, identified pieces, and confidence scores.
 
-## Troubleshooting
-
-- **"No model found"** — run `python demo.py --create-config` to auto-detect model paths, or check `config.json` points at a real `.pt`/`.pth` file.
-- **Weak board detection** — try switching `edge_method` between `"scharr"` and `"multi_scale"`, and make sure the board fills a good chunk of the frame.
-- **Weights missing after clone (a `.pt` file is ~130 bytes instead of several MB)** — install `git-lfs` and run `git lfs pull`.
-
 ## Reference
 
 Wölflein, G.; Arandjelović, O. "Determining Chess Game State From an Image." *Journal of Imaging* 2021, 7, 94. https://doi.org/10.3390/jimaging7060094
