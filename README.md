@@ -52,7 +52,7 @@ pip install torch torchvision opencv-python ultralytics albumentations matplotli
 
 Each module folder also has its own `requirements.txt` if you only need to run that piece in isolation.
 
-Trained model weights (`.pt` files) are tracked with [Git LFS](https://git-lfs.github.com/). After cloning, run:
+Trained model weights (`.pt` files) are tracked with [Git LFS](https://git-lfs.github.com/). If you have `git-lfs` installed, a normal `git clone` pulls them automatically. If a `.pt` file looks tiny (~130 bytes, a text pointer instead of the real weights), run:
 
 ```bash
 git lfs install
@@ -145,13 +145,7 @@ The pipeline outputs standard FEN notation, e.g. `rnbqkbnr/pppppppp/8/8/8/8/PPPP
 
 - **"No model found"** — run `python demo.py --create-config` to auto-detect model paths, or check `config.json` points at a real `.pt`/`.pth` file.
 - **Weak board detection** — try switching `edge_method` between `"scharr"` and `"multi_scale"`, and make sure the board fills a good chunk of the frame.
-- **Weights missing after clone** — you probably skipped `git lfs pull`.
-
-## History note
-
-This repo previously had several branches (`board-localisation`, `occupancy-classification`, `piece-classification`, `piece-classification-camera`, `integration`, `final-integration`) developed in parallel by different people and never fully merged. This `main` brings all of that work together into one working tree, keeping every original commit — same authors, dates, and messages.
-
-A few things were cleaned out along the way: superseded draft scripts from early integration attempts (already replaced by `chess_recognition_system.py`), a stray PDF and `__pycache__` files, and a ~1.7GB COCO image dump that had been committed and then deleted a commit later, leaving behind ~900MB of broken/incomplete Git LFS references that blocked pushing this repo at all. That commit's content was stripped from history rather than carried forward as dead weight — see the Dataset section above for how to pull COCO back down yourself if you need it. Everything else — all real project code, results, and trained models — is untouched.
+- **Weights missing after clone (a `.pt` file is ~130 bytes instead of several MB)** — install `git-lfs` and run `git lfs pull`.
 
 ## Reference
 
