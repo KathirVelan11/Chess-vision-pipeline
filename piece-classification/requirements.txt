@@ -1,5 +1,13 @@
-ultralytics>=8.0.0
+ultralytics==8.3.31
 torch>=2.0.0
 torchvision>=0.15.0
-opencv-python>=4.5.0
+# CPU/GPU support handled by torch meta-package selection below
+# If you do not have PyTorch yet, install one of these:
+# For CPU only (smaller):
+# torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cpu
+# For CUDA 12.1 (adjust to your driver):
+# torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu121
+opencv-python>=4.9.0.80
 numpy>=1.20.0
+pyyaml>=6.0.2
+gradio>=4.44.0
