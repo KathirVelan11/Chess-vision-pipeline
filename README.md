@@ -61,11 +61,25 @@ git lfs pull
 
 ### Dataset
 
-`piece-classification` was trained against a Roboflow chess pieces dataset (see `piece-classification/data.yaml` for the exact source/version) and, in earlier experiments, against COCO val2017 for general object-detection validation. COCO isn't bundled here — if you need it:
+`piece-classification` was trained against a Roboflow chess pieces dataset — see `piece-classification/data.yaml` for the exact source, version, and class list (13 piece classes). It's pulled straight from Roboflow, not stored in this repo:
+
+- https://universe.roboflow.com/joseph-nelson/chess-pieces-new/dataset/24
+
+An earlier experiment also pulled in COCO 2017 (train/val/test images plus segmentation labels) for general object-detection work. That data isn't kept in this repo — it was ~1.7GB and mostly unrelated to chess — but if you want to reproduce that experiment, grab it directly from the COCO site:
 
 ```bash
+# validation images (~1GB, this is the one actually used for validation)
 wget http://images.cocodataset.org/zips/val2017.zip
+
+# training images (~18GB) and test images (~6GB), only needed if retraining from scratch
+wget http://images.cocodataset.org/zips/train2017.zip
+wget http://images.cocodataset.org/zips/test2017.zip
+
+# segmentation labels
+wget https://github.com/ultralytics/yolov5/releases/download/v1.0/coco2017labels-segments.zip
 ```
+
+Unzip into `piece-classification/datasets/coco/images/<split>/` to match the layout the original scripts expected.
 
 ## Running it
 
@@ -135,7 +149,9 @@ The pipeline outputs standard FEN notation, e.g. `rnbqkbnr/pppppppp/8/8/8/8/PPPP
 
 ## History note
 
-This repo previously had several branches (`board-localisation`, `occupancy-classification`, `piece-classification`, `piece-classification-camera`, `integration`, `final-integration`) developed in parallel by different people and never fully merged. This branch brings all of that work together into one working tree, while keeping the full original commit history intact. A few superseded draft scripts from early integration attempts, and a large COCO image dump that had been committed then deleted, were left out of the current tree but are still recoverable from git history if needed.
+This repo previously had several branches (`board-localisation`, `occupancy-classification`, `piece-classification`, `piece-classification-camera`, `integration`, `final-integration`) developed in parallel by different people and never fully merged. This `main` brings all of that work together into one working tree, keeping every original commit — same authors, dates, and messages.
+
+A few things were cleaned out along the way: superseded draft scripts from early integration attempts (already replaced by `chess_recognition_system.py`), a stray PDF and `__pycache__` files, and a ~1.7GB COCO image dump that had been committed and then deleted a commit later, leaving behind ~900MB of broken/incomplete Git LFS references that blocked pushing this repo at all. That commit's content was stripped from history rather than carried forward as dead weight — see the Dataset section above for how to pull COCO back down yourself if you need it. Everything else — all real project code, results, and trained models — is untouched.
 
 ## Reference
 
