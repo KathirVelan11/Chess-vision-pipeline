@@ -1,94 +1,144 @@
-# Chess Recognition System
+# Computer Vision — Chess Playing Robot
 
-A complete implementation of the chess recognition system described in "Determining Chess Game State From an Image" by Wölflin & Arandjelović (2021).
+A computer vision pipeline that takes a photo of a chess board and works out the position on it, output as FEN notation. Built around the approach in Wölflein & Arandjelović's paper ["Determining Chess Game State From an Image"](https://doi.org/10.3390/jimaging7060094) (2021).
 
-## 📋 Overview
+The pipeline has three stages:
 
-This project implements a state-of-the-art chess recognition pipeline that can analyze a photograph of a chess board and output the position in standard FEN notation. The system achieves high accuracy through a three-stage approach:
+1. **Board localisation** — finds the board in the image and rectifies it (Canny edge detection + Hough transform + RANSAC-based corner finding)
+2. **Occupancy classification** — for each of the 64 squares, decides whether it's empty or has a piece on it (ResNet-based binary classifier)
+3. **Piece classification** — for occupied squares, identifies which piece it is (YOLO-based, 12-13 piece classes)
 
-1. **Board Localization** - RANSAC-based homography computation to detect and rectify the chessboard
-2. **Occupancy Classification** - ResNet-based binary classifier to determine which squares are occupied
-3. **Piece Classification** - InceptionV3-based 12-class classifier to identify piece types
+`chess_recognition_system.py` at the repo root ties all three stages together and produces a final FEN string.
 
-## 🎯 Key Features
+## Project structure
 
-- **End-to-end pipeline** from raw image to FEN notation
-- **RANSAC-based board localization** for robust corner detection
-- **Deep learning models** with ResNet and InceptionV3 architectures
-- **Few-shot transfer learning** to adapt to new chess sets using just 2 images
-- **Comprehensive validation** with FEN notation verification
-- **Batch processing** capabilities for multiple images
-- **Detailed visualization** of intermediate results
-
-## 📊 Performance
-
-Based on the original paper methodology:
-- **Per-square accuracy**: 99.77% (0.23% error rate)
-- **28x improvement** over previous state-of-the-art
-- **Transfer learning accuracy**: 99.83% on new chess sets
-- **Processing time**: <0.5s on GPU, ~2s on CPU
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-```bash
-pip install torch torchvision opencv-python scikit-learn matplotlib seaborn
-pip install albumentations pillow numpy pathlib
+```
+Computer-Vision/
+├── board-localisation/       # stage 1: board detection & corner finding
+│   ├── board_detection.py
+│   ├── images/                # sample input photos
+│   └── results/                # pipeline step visualizations
+├── occupancy-classification/ # stage 2: empty vs occupied squares
+│   ├── code1.py
+│   ├── testing.py
+│   └── models/                # training curves, confusion matrix
+├── piece-classification/     # stage 3: which piece is on a square
+│   ├── train_model.py         # trains the YOLO model
+│   ├── yolo_train.py
+│   ├── predict_image.py       # run on a static image
+│   ├── predict_camera.py      # run on a live camera feed
+│   ├── webcam_detection.py
+│   ├── chess_detection/       # training run outputs (weights, curves, val batches)
+│   ├── runs/                  # more training run outputs
+│   └── diagnostics/            # sample captured frames
+├── chess_recognition_system.py  # wires the three stages together
+├── demo.py                    # CLI entry point for the full pipeline
+├── config.json                 # model paths & pipeline settings
+├── utils.py                    # shared helpers (config loading, model path finding, logging)
+├── test_chess_recognition.py   # test suite / benchmark script
+└── requirements / setup files per module
 ```
 
-### Basic Usage
+Board localisation, occupancy classification, and piece classification started as three separate, independently developed modules (originally on their own branches) before being wired together — that's still visible in how each folder is organised and how each one manages its own dependencies.
+
+## Setup
+
+```bash
+python -m venv chess
+source chess/bin/activate   # Windows: chess\Scripts\activate
+
+pip install torch torchvision opencv-python ultralytics albumentations matplotlib seaborn scikit-learn
+```
+
+Each module folder also has its own `requirements.txt` if you only need to run that piece in isolation.
+
+Trained model weights (`.pt` files) are tracked with [Git LFS](https://git-lfs.github.com/). After cloning, run:
+
+```bash
+git lfs install
+git lfs pull
+```
+
+### Dataset
+
+`piece-classification` was trained against a Roboflow chess pieces dataset (see `piece-classification/data.yaml` for the exact source/version) and, in earlier experiments, against COCO val2017 for general object-detection validation. COCO isn't bundled here — if you need it:
+
+```bash
+wget http://images.cocodataset.org/zips/val2017.zip
+```
+
+## Running it
+
+Generate a default config (auto-detects model paths):
+
+```bash
+python demo.py --create-config
+```
+
+Run the full pipeline on an image:
+
+```bash
+python demo.py --image board-localisation/images/chess_image_1.jpg
+python demo.py --image path/to/your/photo.jpg --output result.json
+```
+
+Run tests / a benchmark:
+
+```bash
+python test_chess_recognition.py --image your_chess_image.jpg
+python test_chess_recognition.py --image-dir test_images/ --pattern "*.jpg"
+python test_chess_recognition.py --image your_chess_image.jpg --benchmark --iterations 10
+```
+
+Python API:
 
 ```python
-from chess_recognition_pipeline import ChessRecognitionPipeline
+from chess_recognition_system import ChessRecognitionSystem, load_config
 
-# Initialize pipeline
-pipeline = ChessRecognitionPipeline()
-
-# Process single image
-result = pipeline.process_image("path/to/chess/image.jpg")
+config = load_config('config.json')
+system = ChessRecognitionSystem(config)
+result = system.recognize_chess_state('path/to/image.jpg')
 
 if result['success']:
-    print(f"FEN: {result['fen']}")
-    print(f"Confidence: {result['confidence_score']:.3f}")
+    print(result['fen'])
 ```
 
-### Demo Script
+Each module can also be run standalone — see `board-localisation/test.py`, `occupancy-classification/testing.py`, and `piece-classification/predict_image.py` / `predict_camera.py`.
 
-```bash
-# Single image processing
-python demo_chess_recognition.py --image path/to/chess/image.jpg
+## Config
 
-# Batch processing
-python demo_chess_recognition.py --batch path/to/images/directory/
+`config.json` controls model paths and pipeline behaviour:
 
-# Transfer learning (adapt to new chess set)
-python demo_chess_recognition.py --transfer white_view.jpg black_view.jpg
-
-# Test individual components
-python demo_chess_recognition.py --test-components test_image.jpg
+```json
+{
+  "piece_model_path": "./piece-classification/chess_detection/chess_model_20251007_185940/weights/best.pt",
+  "occupancy_model_path": "occupancy-classification/models/best_model.pth",
+  "square_size": 80,
+  "piece_confidence": 0.3,
+  "piece_iou": 0.5,
+  "board_detection": {
+    "edge_method": "scharr",
+    "hough_threshold": 30
+  }
+}
 ```
 
-## Board Localisation
+## Output
 
-This module identifies and localizes the chess board in an image by detecting its edges and grid intersection points.
+The pipeline outputs standard FEN notation, e.g. `rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1`, plus a JSON result with per-square occupancy, identified pieces, and confidence scores.
 
-### CANNY EDGE DETECTOR:
+## Troubleshooting
 
-1. **Noise Reduction (Gaussian filter)**: Smooths the image to remove noise.
-2. **Finding Intensity Gradient (Sobel operator)**: Calculates gradient magnitude and direction.
-3. **Non-Maximum Suppression (NMS)**: Thins edges by selecting pixels with maximum gradient magnitude.
-4. **Double Thresholding**: Classifies pixels as strong, weak, or non-edges.
-5. **Edge Tracking by Hysteresis**: Finalizes edge detection by including weak edges connected to strong edges.
+- **"No model found"** — run `python demo.py --create-config` to auto-detect model paths, or check `config.json` points at a real `.pt`/`.pth` file.
+- **Weak board detection** — try switching `edge_method` between `"scharr"` and `"multi_scale"`, and make sure the board fills a good chunk of the frame.
+- **Weights missing after clone** — you probably skipped `git lfs pull`.
 
-### HOUGH TRANSFORM:
+## History note
 
-- A line in the image can be represented in parameter space.
-- Instead of looking at pixels in the image, we look at which parameters (θ, ρ) define possible lines passing through those pixels.
-- Then, we vote in an accumulator array for the parameters.
-- Peaks in the accumulator → detected lines.
+This repo previously had several branches (`board-localisation`, `occupancy-classification`, `piece-classification`, `piece-classification-camera`, `integration`, `final-integration`) developed in parallel by different people and never fully merged. This branch brings all of that work together into one working tree, while keeping the full original commit history intact. A few superseded draft scripts from early integration attempts, and a large COCO image dump that had been committed then deleted, were left out of the current tree but are still recoverable from git history if needed.
 
-### Board Detection Process:
+## Reference
 
-![Chess Board Detection Process](board-localisation/results/all_together.jpg)
->>>>>>> 43d1f27 (Feat: Code for the board localisation along with the results)
+Wölflein, G.; Arandjelović, O. "Determining Chess Game State From an Image." *Journal of Imaging* 2021, 7, 94. https://doi.org/10.3390/jimaging7060094
+
+This project is for educational/research purposes — check the original paper and any third-party model licenses before commercial use.

@@ -474,7 +474,7 @@ def load_config(config_path: str = None) -> Dict:
     """Load configuration from file or return defaults"""
     default_config = {
         'piece_model_path': 'piece-classification/chess_detection/chess_model/weights/best.pt',
-        'occupancy_model_path': 'occupancy_classification/models/best_model.pth',
+        'occupancy_model_path': 'occupancy-classification/models/best_model.pth',
         'square_size': 64,
         'piece_confidence': 0.25,
         'piece_iou': 0.45,

@@ -50,8 +50,8 @@ class ModelPathFinder:
     def find_occupancy_model(base_dir: str = ".") -> Optional[str]:
         """Find the best available occupancy classification model"""
         search_paths = [
-            "occupancy_classification/models/best_model.pth",
-            "occupancy_classification/models/*.pth"
+            "occupancy-classification/models/best_model.pth",
+            "occupancy-classification/models/*.pth"
         ]
         
         import glob
